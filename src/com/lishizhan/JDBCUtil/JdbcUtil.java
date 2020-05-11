@@ -45,9 +45,7 @@ public class JdbcUtil {
 
             Class.forName(driver);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
