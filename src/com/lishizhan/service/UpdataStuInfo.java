@@ -1,8 +1,11 @@
 package com.lishizhan.service;
 
+import com.lishizhan.JDBCUtil.JdbcUtil;
 import com.lishizhan.bean.Students;
 import com.lishizhan.view.PrimaryMenu;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Scanner;
 
@@ -29,33 +32,23 @@ public class UpdataStuInfo {
             switch (select) {
                 case "1":
                     updataNum(STUDENTS_ARRAY_LIST, students);
-                    if (PrimaryMenu.isExit()) {
-                        return;
-                    }
+                    if (PrimaryMenu.isExit()) return;
                     break;
                 case "2":
                     updataName(students);
-                    if (PrimaryMenu.isExit()) {
-                        return;
-                    }
+                    if (PrimaryMenu.isExit()) return;
                     break;
                 case "3":
                     updataEnglish(students);
-                    if (PrimaryMenu.isExit()) {
-                        return;
-                    }
+                    if (PrimaryMenu.isExit()) return;
                     break;
                 case "4":
                     updataMath(students);
-                    if (PrimaryMenu.isExit()) {
-                        return;
-                    }
+                    if (PrimaryMenu.isExit()) return;
                     break;
                 case "5":
                     updataJava(students);
-                    if (PrimaryMenu.isExit()) {
-                        return;
-                    }
+                    if (PrimaryMenu.isExit()) return;
                     break;
                 case "0":
                     return;
@@ -87,6 +80,8 @@ public class UpdataStuInfo {
                 System.err.println("成绩不能为空,请重新输入");
             } else {
                 students.setJava(Double.parseDouble(scort));
+                //修改后的数据保存进数据库中
+                updataDataScore(students.getId(), "Java", Double.parseDouble(scort));
                 System.out.println("修改成功!!");
                 return;
             }
@@ -108,6 +103,8 @@ public class UpdataStuInfo {
                 System.err.println("成绩不能为空,请重新输入");
             } else {
                 students.setMath(Double.parseDouble(scort));
+                //修改后的数据保存进数据库中
+                updataDataScore(students.getId(), "Math", Double.parseDouble(scort));
                 System.out.println("修改成功!!");
                 return;
             }
@@ -129,10 +126,52 @@ public class UpdataStuInfo {
                 System.err.println("成绩不能为空,请重新输入");
             } else {
                 students.setEnglish(Double.parseDouble(scort));
+
+                //修改后的数据保存进数据库中
+                updataDataScore(students.getId(), "English", Double.parseDouble(scort));
+
                 System.out.println("修改成功!!");
                 return;
             }
         }
+    }
+
+    /**
+     * 从数据库中修改成绩
+     *
+     * @param id:修改的学生
+     * @param scoreName:科目名称
+     * @param score:成绩
+     */
+    private static void updataDataScore(String id, String scoreName, double score) {
+        Connection connection = null;
+        PreparedStatement preedState = null;
+
+        try {
+            connection = JdbcUtil.getConnection();
+            String sql = null;
+            if ("Java".equals(scoreName)) {
+                sql = "UPDATE students SET Java=? WHERE id = ?";
+            }
+            if ("Math".equals(scoreName)) {
+                sql = "UPDATE students SET math=? WHERE id = ?";
+            }
+            if ("English".equals(scoreName)) {
+                sql = "UPDATE students SET english=? WHERE id = ?";
+            }
+            if (sql != null) {
+                preedState = connection.prepareStatement(sql);
+                preedState.setDouble(1,score);
+                preedState.setString(2,id);
+                int i = preedState.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JdbcUtil.close(connection, preedState);
+        }
+
+
     }
 
     /**
@@ -143,6 +182,8 @@ public class UpdataStuInfo {
 
     private static void updataName(Students students) {
         PrimaryMenu.updataName(students);
+        udataNumNameData(students, students.getName());
+
     }
 
     /**
@@ -161,9 +202,46 @@ public class UpdataStuInfo {
                 System.err.println("数据不合法,请重新输入");
             } else {
                 students.setStuNum(number);
+                udataNumNameData(students, number);
                 System.out.println("修改成功!!");
                 return;
             }
         }
+    }
+
+    /**
+     * 从数据库中修改学号姓名
+     *
+     * @param students:
+     * @param string:学号或者姓名
+     */
+    private static void udataNumNameData(Students students, String string) {
+        Connection connection = null;
+        PreparedStatement preState = null;
+        try {
+            connection = JdbcUtil.getConnection();
+            String sql = null;
+            if (string.equals(students.getStuNum())) {
+                sql = "update students set stuNum = ? where id = ?";
+                preState = connection.prepareStatement(sql);
+                preState.setString(1, string);
+                preState.setString(2, students.getId());
+                int i = preState.executeUpdate();
+            }
+            if (string.equals(students.getName())) {
+                sql = "update students set name = ? where id = ?";
+                preState = connection.prepareStatement(sql);
+                preState.setString(1, string);
+                preState.setString(2, students.getId());
+                int i = preState.executeUpdate();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JdbcUtil.close(connection, preState);
+        }
+
+
     }
 }

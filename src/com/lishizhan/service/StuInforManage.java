@@ -1,10 +1,12 @@
 package com.lishizhan.service;
 
+import com.lishizhan.JDBCUtil.JdbcUtil;
 import com.lishizhan.bean.GenderEnum;
 import com.lishizhan.bean.Students;
 import com.lishizhan.view.PrimaryMenu;
 
 import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -20,6 +22,41 @@ public class StuInforManage {
     private static final List<Students> STUDENTS_ARRAY_LIST = new ArrayList<>();
     //定义全局输入
     private static final Scanner SYS_SCANNER = new Scanner(System.in);
+
+    static {
+        //从数据库中读取学生信息
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = JdbcUtil.getConnection();
+            String sql = "select *from students";
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(sql);
+            Students students = null;
+            while (resultSet.next()) {
+                students = new Students();
+                students.setId(resultSet.getString("id"));
+                students.setName(resultSet.getString("name"));
+                students.setStuNum(resultSet.getString("stuNum"));
+                students.setSex(GenderEnum.valueOf(resultSet.getString("sex")));
+                students.setAge(resultSet.getInt("age"));
+                students.setMath(resultSet.getDouble("math"));
+                students.setEnglish(resultSet.getDouble("english"));
+                students.setJava(resultSet.getDouble("Java"));
+                STUDENTS_ARRAY_LIST.add(students);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JdbcUtil.close(connection, statement, resultSet);
+        }
+
+
+    }
+
 
     public static void stuMenu() {
         System.out.println("\t\t\t\t\t  *欢迎使用学生管理系统*\n");
@@ -63,6 +100,7 @@ public class StuInforManage {
                     updateStudentInfo();
                     break;
                 case "0":
+
                     return;
                 default:
                     System.err.println("您的命令输入有误，请重新确认！");
@@ -71,11 +109,43 @@ public class StuInforManage {
     }
 
     /**
+     * 插入
+     * 将学生信息写进数据库
+     */
+    private static int writeToDatabase(Students students) {
+        if (students == null) return 0;
+        Connection connection = null;
+        PreparedStatement preStat = null;
+        try {
+            connection = JdbcUtil.getConnection();
+            String sql = "INSERT INTO students VALUES(?,?,?,?,?,?,?,?)";
+            preStat = connection.prepareStatement(sql);
+            preStat.setString(1, students.getId());
+            preStat.setString(2, students.getName());
+            preStat.setString(3, students.getStuNum());
+            preStat.setString(4, students.getSex().toString());
+            preStat.setInt(5, students.getAge());
+            preStat.setDouble(6, students.getMath());
+            preStat.setDouble(7, students.getEnglish());
+            preStat.setDouble(8, students.getJava());
+
+            return preStat.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JdbcUtil.close(connection, preStat);
+        }
+        return 0;
+
+    }
+
+    /**
      * 打印学生成绩表
      */
     private static void printStudentScort() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
+        if (isArrayEmpty()) return;
         PrimaryMenu.showTitle();
         for (Students students : STUDENTS_ARRAY_LIST) {
             System.out.println(students.printStuScort());
@@ -84,13 +154,12 @@ public class StuInforManage {
     }
 
 
-
     /**
      * 修改学生信息
      */
     private static void updateStudentInfo() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
+        if (isArrayEmpty()) return;
 
         while (true) {
             System.out.println("请输入您要修改学生的学号:");
@@ -122,7 +191,7 @@ public class StuInforManage {
      */
     private static void deleteStudentInfo() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
+        if (isArrayEmpty()) return;
 
         while (true) {
             System.out.println("请输入您要删除学生的学号:");
@@ -141,6 +210,7 @@ public class StuInforManage {
                         String YN = SYS_SCANNER.nextLine();
                         if ("y".equals(YN)) {
                             STUDENTS_ARRAY_LIST.remove(i);
+                            deleteDataStuInfo(students1);
                             System.out.println("删除成功!!");
 
                         } else {
@@ -162,11 +232,34 @@ public class StuInforManage {
     }
 
     /**
+     * 从数据库中删除学生信息
+     * @param students1
+     */
+    private static void deleteDataStuInfo(Students students1) {
+        try {
+            Connection connection = JdbcUtil.getConnection();
+            String sql = "DELETE FROM students WHERE stuNum = ?";
+            PreparedStatement preState= connection.prepareStatement(sql);
+            preState.setString(1,students1.getStuNum());
+            int i = preState.executeUpdate();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+
+        }
+
+
+
+
+    }
+
+    /**
      * 按学号搜索学生信息
      */
     private static void searchStudentInfo() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
+        if (isArrayEmpty()) return;
 
         while (true) {
             System.out.println("请输入您要查找的学生学号:");
@@ -197,8 +290,8 @@ public class StuInforManage {
      */
     private static void addStudentScore() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
-
+        if (isArrayEmpty()) return;
+        int sum = 0;
         while (true) {
             System.out.println("请输入您要录入成绩的学生学号:");
             String stuNum = SYS_SCANNER.nextLine();
@@ -248,8 +341,12 @@ public class StuInforManage {
                                 break;
                             }
                         }
-                        System.out.println("录入成绩成功!!");
+
+                        //将学生成绩写进数据库
+                        sum +=updateDataScore(students1);
+
                         if (PrimaryMenu.isExit()) {
+                            System.out.println("录入成绩成功,更新"+sum+"条数据!");
                             return;
                         } else {
                             break;
@@ -262,6 +359,33 @@ public class StuInforManage {
             }
         }
 
+    }
+
+    /**
+     * 录入成绩写进数据库
+     *
+     * @param students1 ;
+     * @return :录入信息的条数
+     */
+    private static int updateDataScore(Students students1) {
+        Connection connection = null;
+        PreparedStatement preState = null;
+        try {
+            connection = JdbcUtil.getConnection();
+            String sql = "UPDATE students SET math=?,english=?,Java=? WHERE stuNum = ?";
+            preState = connection.prepareStatement(sql);
+            preState.setDouble(1, students1.getMath());
+            preState.setDouble(2, students1.getEnglish());
+            preState.setDouble(3, students1.getJava());
+            preState.setString(4, students1.getStuNum());
+
+            return preState.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            JdbcUtil.close(connection, preState);
+        }
+        return 0;
     }
 
     /**
@@ -282,7 +406,7 @@ public class StuInforManage {
      */
     private static void printStudentInfo() {
         //判断集合是否为空
-        if(isArrayEmpty())return;
+        if (isArrayEmpty()) return;
         System.out.println();
         System.out.println("*****************学生信息表****************");
         System.out.println("身份证号\t\t\t\t学号\t  姓名\t性别\t年龄\t ");
@@ -300,6 +424,8 @@ public class StuInforManage {
     private static void addStudentInfo() {
         Students students = null;
         boolean flga = true;
+        //记录学生信息条数
+        int sum = 0;
         while (flga) {
             while (true) {
                 System.out.println("请输入学生身份证号：");
@@ -349,9 +475,11 @@ public class StuInforManage {
 
 
             STUDENTS_ARRAY_LIST.add(students);
-            System.out.println("学生主要信息录入成功！！");
 
+            //将录入的学生信息写进数据库
+            sum += writeToDatabase(students);
             if (PrimaryMenu.isExit()) {
+                System.out.println("成功录入" + sum + "条学生主要信息！！");
                 flga = false;
             }
         }
@@ -359,9 +487,10 @@ public class StuInforManage {
 
     /**
      * 判断学生信息集合是否为空
+     *
      * @return :集合为空则返回true,反之false.
      */
-    private static boolean isArrayEmpty(){
+    private static boolean isArrayEmpty() {
         if (STUDENTS_ARRAY_LIST.size() == 0) {
             System.out.println("学生信息管理系统空空如也!!!");
             PrimaryMenu.buttonEnter();
