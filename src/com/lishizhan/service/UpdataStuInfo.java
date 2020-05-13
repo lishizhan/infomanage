@@ -54,11 +54,7 @@ public class UpdataStuInfo {
                     return;
                 default:
                     System.err.println("您的命令输入有误，请重新确认！\n");
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    PrimaryMenu.await();
 
             }
         }

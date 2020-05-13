@@ -61,6 +61,7 @@ public class TeaInforManage {
                     return;
                 default:
                     System.err.println("您的命令输入有误，请重新确认！");
+                PrimaryMenu.await();
             }
         }
     }
@@ -88,14 +89,14 @@ public class TeaInforManage {
     private static void updataTeacherInfo() {
         //判断集合是否为空
         if (isArrayEmpty()) return;
-
+        Teachers teachers = null;
         while (true) {
             System.out.println("请输入您要修改教师的工号:");
             String strNum = SYS_SCANNER.nextLine();
             if (PrimaryMenu.putIsEmpty(strNum) || PrimaryMenu.isNumber(strNum)) {
                 System.err.println("数据不合法,请重新输入");
             } else {
-                Teachers teachers = null;
+
                 for (int i = 0; i < TEACHERS_ARRAY_LIST.size(); i++) {
                     if (TEACHERS_ARRAY_LIST.get(i).getTeachId().equals(strNum)) {
                         teachers = TEACHERS_ARRAY_LIST.get(i);
@@ -107,8 +108,10 @@ public class TeaInforManage {
                     }
                 }
                 if (teachers == null) {
-                    System.err.println("没有找到该教师信息,请重新输入!");
+                    System.err.println("没有找到该教师信息!");
+                    PrimaryMenu.await();
                 }
+                if (PrimaryMenu.isExit())return;
             }
         }
 
@@ -147,8 +150,10 @@ public class TeaInforManage {
                     }
                 }
                 if (teachers == null) {
-                    System.err.println("没有找到该教师信息,请重新输入!");
+                    System.err.println("没有找到该教师信息!");
+                    PrimaryMenu.await();
                 }
+                if (PrimaryMenu.isExit())return;
             }
 
         }
@@ -212,7 +217,9 @@ public class TeaInforManage {
             }
             if (teachers == null) {
                 System.err.println("您要录入课时的教师身份证号不存在！！");
+                PrimaryMenu.await();
             }
+            if (PrimaryMenu.isExit())return;
         }
     }
 

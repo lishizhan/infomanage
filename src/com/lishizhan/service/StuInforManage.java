@@ -100,10 +100,10 @@ public class StuInforManage {
                     updateStudentInfo();
                     break;
                 case "0":
-
                     return;
                 default:
                     System.err.println("您的命令输入有误，请重新确认！");
+                    PrimaryMenu.await();
             }
         }
     }
@@ -172,15 +172,18 @@ public class StuInforManage {
                     if (STUDENTS_ARRAY_LIST.get(i).getStuNum().equals(strNum)) {
                         students1 = STUDENTS_ARRAY_LIST.get(i);
                         System.out.println("待修改的学生信息为:");
-                        System.out.println("\t" + students1.p());
+                        showInfoTitle();
+                        System.out.println(students1.p());
 
                         UpdataStuInfo.updataStudentInfo(STUDENTS_ARRAY_LIST, students1);
                         return;
                     }
                 }
                 if (students1 == null) {
-                    System.err.println("没有找到该学生信息,请重新输入!");
+                    System.err.println("没有找到该学生信息!");
+                    PrimaryMenu.await();
                 }
+                if (PrimaryMenu.isExit())return;
             }
         }
     }
@@ -204,7 +207,8 @@ public class StuInforManage {
                     if (STUDENTS_ARRAY_LIST.get(i).getStuNum().equals(strNum)) {
                         students1 = STUDENTS_ARRAY_LIST.get(i);
                         System.out.println("待删除的学生信息为:");
-                        System.out.println("\t" + students1.p());
+                        showInfoTitle();
+                        System.out.println(students1.p());
 
                         System.out.println("是否将学号为:" + students1.getStuNum() + "的学生信息删除,请确认(y/n)!");
                         String YN = SYS_SCANNER.nextLine();
@@ -223,8 +227,10 @@ public class StuInforManage {
                     }
                 }
                 if (students1 == null) {
-                    System.err.println("没有找到该学生信息,请重新输入!");
+                    System.err.println("没有找到该学生信息!");
+                    PrimaryMenu.await();
                 }
+                if (PrimaryMenu.isExit())return;
             }
 
         }
@@ -272,14 +278,17 @@ public class StuInforManage {
                     if (STUDENTS_ARRAY_LIST.get(i).getStuNum().equals(stuNum)) {
                         students1 = STUDENTS_ARRAY_LIST.get(i);
                         System.out.println("该学生信息如下:");
-                        System.out.println("\t" + students1.p());
+                        showInfoTitle();
+                        System.out.println(students1.p());
                         PrimaryMenu.buttonEnter();
                         return;
                     }
                 }
                 if (students1 == null) {
-                    System.err.println("没有找到该学生信息,请重新输入!");
+                    System.err.println("没有找到该学生信息!");
+                    PrimaryMenu.await();
                 }
+                if (PrimaryMenu.isExit())return;
             }
         }
     }
@@ -497,5 +506,15 @@ public class StuInforManage {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 打印学生信息标题
+     */
+    private static void showInfoTitle() {
+        System.out.println();
+        System.out.println("***********************学生信息表**********************");
+        System.out.println("身份证号\t\t\t  学号\t  姓名\t性别\t年龄");
+        System.out.println("****************************************************");
     }
 }

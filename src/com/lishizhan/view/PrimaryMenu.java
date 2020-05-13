@@ -44,6 +44,7 @@ public class PrimaryMenu {
 
                 default:
                     System.err.println("您的命令输入有误，请重新确认！\n");
+                    PrimaryMenu.await();
             }
         }
 
@@ -235,6 +236,18 @@ public class PrimaryMenu {
         System.out.println("学号\t\t姓名\t\t数学\t\t\t英语\t\t\tJava");
         System.out.println("*********************************************");
     }
+
+    /**
+     * 等待1ms
+     */
+    public static void await(){
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }
